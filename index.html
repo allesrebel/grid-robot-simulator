@@ -65,7 +65,7 @@
 	<div id="container">
 		<div id="grid"></div>
 		<div id="log">
-			<h3>Event Log</h3>
+			<h3>Event Log <button id="exportLog">Export Log</button></h3>
 			<ul></ul>
 		</div>
 	</div>
@@ -228,7 +228,7 @@
 			if (distance[end[0]][end[1]] === Infinity) {
 				logEvent('(Dijkstra) No path found!!!!');
 			} else {
-				logEvent('(Dijkstra) Shortest path length: ' + distance[end[0]][end[1]]);
+				logEvent('(Dijkstra) Highlighting Path Found! Shortest path length: ' + distance[end[0]][end[1]]);
 				backtrackPath(start, end, distance);
 			}
 		}
@@ -251,6 +251,20 @@
 			}
 		}
 
+		document.getElementById('exportLog').onclick = function() {
+			const logEntries = Array.from(document.querySelectorAll('#log li'));
+			const logText = logEntries.map(entry => entry.textContent).join('\n');
+			const blob = new Blob([logText], { type: "text/plain;charset=utf-8" });
+			const a = document.createElement('a');
+			a.href = URL.createObjectURL(blob);
+
+			const currentTime = new Date();
+			const timestamp = currentTime.toLocaleTimeString();
+
+			a.download = `${timestamp}.log`;
+			a.click();
+		};
+
 		document.getElementById('exportGrid').onclick = function() {
 			const gridStateString = JSON.stringify(grid);
 			const blob = new Blob([gridStateString], { type: "text/plain;charset=utf-8" });
@@ -271,17 +285,17 @@
 						if (Array.isArray(importedGrid) && importedGrid.length === m && importedGrid[0].length === n) {
 							grid = importedGrid;
 							renderGrid();
-							logEvent("Grid state imported successfully.");
+							logEvent(`Grid state imported successfully from ${file.name}`);
 						} else {
-							logEvent("Invalid grid state.");
+							logEvent("Invalid grid state");
 						}
 					} catch (error) {
-						logEvent("Error parsing grid state.");
+						logEvent("Error parsing grid state");
 					}
 				};
 				reader.readAsText(file);
 			} else {
-				logEvent("No file selected.");
+				logEvent("No file selected");
 			}
 		};
 
@@ -294,6 +308,7 @@
 			grid = Array(m).fill().map(() => Array(n).fill(1));
 			start = null;
 			end = null;
+			logEvent("Removed everything!");
 			renderGrid();
 		}
 
@@ -323,6 +338,7 @@
 		}
 
 		renderGrid();
+		logEvent("Finished Init! Go ahead and click cells or control buttons")
 	</script>
 </body>
 
