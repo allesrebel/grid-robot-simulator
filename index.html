@@ -82,6 +82,12 @@
 	<button id="resetStart">Reset Start</button>
 	<button id="resetEnd">Reset End</button>
 
+	<br>
+	<button id="exportGrid">Export Grid to File</button>
+	<input type="file" id="fileInput">
+	<button id="importGrid">Import Grid from File</button>
+
+
 	<script>
 		const m = 40;
 		const n = 30;
@@ -244,6 +250,40 @@
 				[x, y] = nextStep;
 			}
 		}
+
+		document.getElementById('exportGrid').onclick = function() {
+			const gridStateString = JSON.stringify(grid);
+			const blob = new Blob([gridStateString], { type: "text/plain;charset=utf-8" });
+			const a = document.createElement('a');
+			a.href = URL.createObjectURL(blob);
+			a.download = 'gridState.txt';
+			a.click();
+		};
+
+		document.getElementById('importGrid').onclick = function() {
+			const fileInput = document.getElementById('fileInput');
+			const file = fileInput.files[0];
+			if (file) {
+				const reader = new FileReader();
+				reader.onload = function(event) {
+					try {
+						const importedGrid = JSON.parse(event.target.result);
+						if (Array.isArray(importedGrid) && importedGrid.length === m && importedGrid[0].length === n) {
+							grid = importedGrid;
+							renderGrid();
+							logEvent("Grid state imported successfully.");
+						} else {
+							logEvent("Invalid grid state.");
+						}
+					} catch (error) {
+						logEvent("Error parsing grid state.");
+					}
+				};
+				reader.readAsText(file);
+			} else {
+				logEvent("No file selected.");
+			}
+		};
 
 		document.getElementById('setDefaultStartEnd').onclick = setDefaultStartEnd;
 		document.getElementById('reset').onclick = resetGrid;
