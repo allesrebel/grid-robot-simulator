@@ -8,13 +8,14 @@
 	<style>
 		#container {
 			display: flex;
+			height: 100vh;
 		}
 
 		#grid {
 			display: grid;
 			grid-template-columns: repeat(30, 20px);
-			gap: 2px;
 			flex: 1;
+			overflow: auto;
 		}
 
 		#log {
@@ -22,6 +23,7 @@
 			padding: 10px;
 			border-left: 1px solid black;
 			overflow-y: auto; /* To make it scrollable if there are many logs */
+			max-height: 100vh;
 		}
 		
 		#log ul {
@@ -32,6 +34,7 @@
 		.cell {
 			width: 20px;
 			height: 20px;
+			margin: 0; /* Ensure no margin */
 			border: 1px solid black;
 			cursor: pointer;
 			display: flex;           /* Enable flexbox */
@@ -56,7 +59,8 @@
 		}
 
 		.cell[data-path="true"] {
-			border: 3px solid blue;
+			border: thick;
+			background: blue;
 		}
 	</style>
 </head>
@@ -65,28 +69,28 @@
 	<div id="container">
 		<div id="grid"></div>
 		<div id="log">
+			<div id="controls">
+				<button id="inference">Run Simulation</button>
+				<button id="setDefaultStartEnd">Default Starting (5,5) / Ending (38,28)</button>
+				<button id="findPath">Find Ideal Path (Dijkstra)</button>
+				<br>
+				<button onclick="generateObstacles(0.10)">10% Obstacles</button>
+				<button onclick="generateObstacles(0.20)">20% Obstacles</button>
+				<button onclick="generateObstacles(0.45)">45% Obstacles</button>
+				<br>
+				<button id="reset">Reset Everything</button>
+				<button id="resetStart">Reset Start</button>
+				<button id="resetEnd">Reset End</button>
+			
+				<br>
+				<button id="exportGrid">Export Grid to File</button>
+				<input type="file" id="fileInput">
+				<button id="importGrid">Import Grid from File</button>
+			</div>		
 			<h3>Event Log <button id="exportLog">Export Log</button></h3>
 			<ul></ul>
 		</div>
 	</div>
-	
-	<button id="inference">Run Simulation</button>
-	<button id="setDefaultStartEnd">Default Starting (5,5) / Ending (38,28)</button>
-	<button id="findPath">Find Ideal Path (Dijkstra)</button>
-	<br>
-	<button onclick="generateObstacles(0.10)">10% Obstacles</button>
-	<button onclick="generateObstacles(0.20)">20% Obstacles</button>
-	<button onclick="generateObstacles(0.45)">45% Obstacles</button>
-	<br>
-	<button id="reset">Reset Everything</button>
-	<button id="resetStart">Reset Start</button>
-	<button id="resetEnd">Reset End</button>
-
-	<br>
-	<button id="exportGrid">Export Grid to File</button>
-	<input type="file" id="fileInput">
-	<button id="importGrid">Import Grid from File</button>
-
 
 	<script>
 		const m = 40;
@@ -143,6 +147,8 @@
 			listItem.textContent = `[${timestamp}] ${message}`;
 			
 			logList.appendChild(listItem);
+			const logContainer = document.getElementById('log');
+			logContainer.scrollTop = logContainer.scrollHeight;
 		}
 
 		function toggleCell(i, j) {
@@ -236,7 +242,8 @@
 		function backtrackPath(start, end, distance) {
 			let [x, y] = end;
 			while (x !== start[0] || y !== start[1]) {
-				document.querySelector(`.cell[data-row="${x}"][data-col="${y}"]`).dataset.path = "true";
+				if(!(x == end[0] && y == end[1]))
+					document.querySelector(`.cell[data-row="${x}"][data-col="${y}"]`).dataset.path = "true";
 				let minDist = Infinity;
 				let nextStep = null;
 				for (const [dx, dy] of [[0, 1], [1, 0], [0, -1], [-1, 0]]) {
@@ -270,7 +277,11 @@
 			const blob = new Blob([gridStateString], { type: "text/plain;charset=utf-8" });
 			const a = document.createElement('a');
 			a.href = URL.createObjectURL(blob);
-			a.download = 'gridState.txt';
+
+			const currentTime = new Date();
+			const timestamp = currentTime.toLocaleTimeString();
+
+			a.download = '${timestamp}.grid';
 			a.click();
 		};
 
