@@ -93,14 +93,19 @@
 	</div>
 
 	<script>
-		const n = 40;
-		const m = 30;
-		let direction = 0; // means facing upwards by default
 		let grid = Array(m).fill().map(() => Array(n).fill(1));
+
+		// The Data Base for the Robot
+		let direction = 0; // means facing upwards by default
 		let memory = Array(m).fill().map(() => Array(n).fill(-1));
+		const n = 40; // note n and m are flipped because we do row first
+		const m = 30; // then column in this program, either way, it produces 0-39 range for X
 		let start = null;
 		let end = null;
 		let current_position = null;
+
+		// Next Move output from engine
+		const queue = [{ x: start[0], y: start[1], dist: 0 }];	// for next move!
 
 
 		function renderGrid() {
@@ -180,34 +185,93 @@
 				}
 			}
 
+			////////
+			// Initialization
 			// before performing simulation, initialize the memory
-			memory = Array(m).fill().map(() => Array(n).fill(-1));
+			// 0 = obstacle, 1 = free, 2 = unknown
+			memory = Array(m).fill().map(() => Array(n).fill(2));
 
 			// Shade Memory for Start / End with Blocked 
 			memory[start[0]][start[1]] = 0;
 			memory[end[0]][end[1]] = 0;
 			current_position = start;
+			const visited = Array(m).fill().map(() => Array(n).fill(false));
+			////////
 
-			// Determine the current direction index based on direction
-			const forward = getDeltas( direction );
-			const leftDir = getDeltas( direction - 45 );  // 45 degrees to the left
-			const rightDir = getDeltas( direction + 45 );  // 45 degrees to the right
+			// our path finding algo to generate next cell
+			// based on database
+			function dijkstraShortestPath() {
+				const distance = Array(m).fill().map(() => Array(n).fill(Infinity));
+				const directions = [getDeltas(direction), getDeltas(direction - 45), getDeltas(direction + 45), getDeltas(direction + 45 * 4)];
 
-			// Scan straight ahead
-			scanAhead(current_position[0], current_position[1], forward[0], forward[1]);
-			// Scan to the left
-			scanAhead(current_position[0], current_position[1], leftDir[0], leftDir[1]);
-			// Scan to the right
-			scanAhead(current_position[0], current_position[1], rightDir[0], rightDir[1]);
+				distance[start[0]][start[1]] = 0;
 
-			// determine next action using rules
-			// and database (forward/backward chaining)
+				const current = queue.shift();
+				if (!visited[current.x][current.y]) return;
+				visited[current.x][current.y] = true;
 
-			// log the event to database, and print out memory
-			// print memory to log
+				for (const dir of directions) {
+					const newX = current.x + dir[0];
+					const newY = current.y + dir[1];
 
-			// Optionally, render the memory to visualize it
-			renderMemory();
+					if (newX >= 0 && newX < n && newY >= 0 && newY < m && !visited[newX][newY] && memory[newX][newY] == 1) {
+						const newDist = current.dist + 1;
+						if (newDist < distance[newX][newY]) {
+							distance[newX][newY] = newDist;
+							queue.push({ x: newX, y: newY, dist: newDist });
+						}
+					}
+				}
+
+				// Return the distance matrix
+				return distance;
+			}
+
+			let stopped = false;
+			while(!stopped)
+			{
+				//// Perform Scan based on current location
+				// Determine the current direction index based on direction
+				const forward = getDeltas( direction );
+				const leftDir = getDeltas( direction - 45 );  // 45 degrees to the left
+				const rightDir = getDeltas( direction + 45 );  // 45 degrees to the right
+
+				// Scan straight ahead
+				scanAhead(current_position[0], current_position[1], forward[0], forward[1]);
+				// Scan to the left
+				scanAhead(current_position[0], current_position[1], leftDir[0], leftDir[1]);
+				// Scan to the right
+				scanAhead(current_position[0], current_position[1], rightDir[0], rightDir[1]);
+				////
+
+				// determine next action using rules
+				// and database (forward/backward chaining)
+				// of the three possible actions, we choose one
+				// either:
+				// * we move forward into one of the three cells
+				// * rotate left or right 
+				// * move backwards one cell
+				// Backwards chaining - starting from the goal
+				// have we seen the cells near it?
+				// 	then -> queue 
+				// we we haven't queued anything. Let's rotate
+			
+
+				// movement rule -> if next move doesn't hit the bounds or hit a wall
+					// doesn't matter if it's forward 3 or back 1
+				// perform the action
+
+				// rotation rule -> if next move is a rotation, perform it
+
+				// log the event to database for next round
+				// print memory to log
+
+				// Optionally, render the memory to visualize it
+				renderMemory();
+
+				// completion rule -> do we have a move at all in the queue?
+
+			}
 		}
 
 		function renderMemory() {
