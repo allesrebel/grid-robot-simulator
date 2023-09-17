@@ -203,6 +203,11 @@
 			}
 
 			function determineBestMoveTowardsEnd() {
+
+				function pathContainsCoordinate(path, coord) {
+					return path.some(point => point[0] === coord[0] && point[1] === coord[1]);
+				}
+
 				const forward = getDeltas(current_rotation);
 				const leftDir = getDeltas(current_rotation - 45);
 				const rightDir = getDeltas(current_rotation + 45);
@@ -233,7 +238,7 @@
 						const visitPenalty = visitedCells[newRow][newCol] ? 7 : 0 ;
 
 						// Prioritize cells that are part of the Dijkstra's path
-						const onPathBonus = path.includes([newRow, newCol]) ? -100 : 0;
+						const onPathBonus = pathContainsCoordinate(path, [newRow, newCol]) ? -100 : 0;
 
 						// rotates usually a good thing, flat bonus (TODO: actually check if scanning helps)
 						const rotationBonus = (type === "rotate" ) ? -15 : 0;
@@ -244,7 +249,7 @@
 						const score = distance + visitPenalty + unvisitedClearBonus  + onPathBonus + rotationBonus;
 
 						// To DEBUG scoring
-						//logEvent(`min: ${minScore}, vs ${type} w/ ${score}: ${distance} + ${visitPenalty} + ${unvisitedClearBonus}  + ${onPathBonus} + ${rotationBonus}`)
+						// logEvent(`min: ${minScore}, vs ${type} w/ ${score}: ${distance} + ${visitPenalty} + ${unvisitedClearBonus}  + ${onPathBonus} + ${rotationBonus}`)
 						if (score < minScore) {
 							minScore = score;
 							bestMove = { move, type };
@@ -315,6 +320,9 @@
 			}
 
 			function runDijkstraOnMemory(start, end) {
+				const KNOWN_PATH_COST = 1;
+				const UNKNOWN_PATH_COST = 10; // This can be adjusted based on how much you want to prioritize known paths.
+
 				const distance = Array(rows).fill().map(() => Array(cols).fill(Infinity));
 				const visited = Array(rows).fill().map(() => Array(cols).fill(false));
 				const previous = Array(rows).fill().map(() => Array(cols).fill(null));
@@ -329,12 +337,14 @@
 					if (visited[row][col]) continue;
 					visited[row][col] = true;
 
-					for (const [dr, dc] of [[0, 1], [1, 0], [0, -1], [-1, 0]]) {
+					for (const [dr, dc] of [[0, 1], [1, 0], [0, -1], [-1, 0], [1, 1], [1, -1], [-1, 1], [-1, -1]]) {
 						const nc = col + dc;
 						const nr = row + dr;
 
 						if (nc >= 0 && nr >= 0 && nc < cols && nr < rows && !visited[nr][nc] && (memory[nr][nc] === 1 || memory[nr][nc] === 2)) {
-							const newDist = d + 1;
+							// Determine the cost of the move based on memory
+							const moveCost = (memory[nr][nc] === 1) ? KNOWN_PATH_COST : UNKNOWN_PATH_COST;
+							const newDist = d + moveCost; // Use the moveCost here
 							if (newDist < distance[nr][nc]) {
 								distance[nr][nc] = newDist;
 								previous[nr][nc] = [row, col];
@@ -385,6 +395,7 @@
 				// 2. Check if the robot has rotated 8 times without gaining new information
 				if (rotation_count >= 8 && previousMemory === JSON.stringify(memory)) {
 					logEvent('(Simulation) Exiting simulation as no movements after 8 rotations.');
+					let path = runDijkstraOnMemory(current_position, end);
 					break;
 				}
 
