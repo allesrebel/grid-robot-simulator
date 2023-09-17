@@ -219,8 +219,8 @@
 				const moves = [
 					{ move: rotate, type: "rotate" },
 					{ move: forward, type: "forward" },
-					// { move: leftDir, type: "left" },
-					// { move: rightDir, type: "right" },
+					{ move: leftDir, type: "left" },
+					{ move: rightDir, type: "right" },
 					{ move: backward, type: "backward" }
 				];
 
@@ -290,6 +290,16 @@
 					rotation_count = 0;
 				}
 				visitedCells[current_position[0]][current_position[1]] += 1;
+
+				// if the move was right or left steering, apply the rotation change
+				if( move.type === 'right')
+				{
+					current_rotation = (current_rotation + 45) % 360;
+				}
+				else if( move.type === 'left' )
+				{
+					current_rotation = ((current_rotation - 45) < 0 ? 360 - 45 : current_rotation - 45) % 360;
+				}
 
 				const cell = document.querySelector(`.cell[data-row="${current_position[0]}"][data-col="${current_position[1]}"]`);
 				cell.innerHTML = getArrowForDirection(current_rotation);
@@ -402,7 +412,7 @@
 				// 3. Check if the robot has reached the end point
 				if (current_position[0] === end[0] && current_position[1] === end[1]) {
 					logEvent(`(Simulation) Exiting Simulation, Robot has reached the goal in ${current_iteration} steps!`);
-					const memoryString = JSON.stringify(memory);
+					const memoryString = '[' + memory.map(row => JSON.stringify(row)).join(',\n') + ']';
 					const blob = new Blob([memoryString], { type: "text/plain;charset=utf-8" });
 					const a = document.createElement('a');
 					a.href = URL.createObjectURL(blob);
@@ -411,8 +421,9 @@
 					const timestamp = currentTime.toLocaleTimeString();
 
 					a.download = `Memory_${timestamp}.json`;
-					a.click();
-					logEvent(`(Simulation) Memory exported as Memory_${timestamp}.json`);
+					a.textContent = "Download";
+
+					logEvent(`(Simulation) Memory exported as ${a.download}->`, a);
 					break;
 				}
 
@@ -442,7 +453,7 @@
 			}
 		}
 
-		function logEvent(message) {
+		function logEvent(message, link_item) {
 			const currentTime = new Date();
 			const timestamp = currentTime.toLocaleTimeString();
 
@@ -451,6 +462,8 @@
 			listItem.textContent = `[${timestamp}] ${message}`;
 			
 			logList.appendChild(listItem);
+			if( link_item ) listItem.appendChild(link_item);
+
 			const logContainer = document.getElementById('log');
 			logContainer.scrollTop = logContainer.scrollHeight;
 		}
@@ -578,7 +591,7 @@
 		};
 
 		document.getElementById('exportGrid').onclick = function() {
-			const gridStateString = JSON.stringify(grid);
+			const gridStateString = '[\n' + grid.map(row => JSON.stringify(row)).join(',\n') + '\n]';
 			const blob = new Blob([gridStateString], { type: "text/plain;charset=utf-8" });
 			const a = document.createElement('a');
 			a.href = URL.createObjectURL(blob);
