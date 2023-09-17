@@ -522,6 +522,8 @@
 
 		document.getElementById('findPath').onclick = findPath;
 
+		const directions = [[0, 1], [1, 0], [0, -1], [-1, 0], [-1, -1], [1, 1], [-1, 1], [1, -1]];
+
 		function findPath() {
 			if (!start || !end) {
 				logEvent('(Dijkstra) Please set both start and end points.');
@@ -541,7 +543,7 @@
 				if (visited[row][col]) continue;
 				visited[row][col] = true;
 
-				for (const [drow, dcol] of [[0, 1], [1, 0], [0, -1], [-1, 0]]) {
+				for (const [drow, dcol] of directions) {
 					const nrow = row + drow;
 					const ncol = col + dcol;
 
@@ -568,7 +570,7 @@
 			while (row !== start[0] || col !== start[1]) {
 				let minDist = Infinity;
 				let nextStep = null;
-				for (const [drow, dcol] of [[0, 1], [1, 0], [0, -1], [-1, 0]]) {
+				for (const [drow, dcol] of directions) {
 					const nrow = row + drow;
 					const ncol = col + dcol;
 					if (nrow >= 0 && ncol >= 0 && nrow < rows && ncol < cols && distance[nrow][ncol] < minDist) {
