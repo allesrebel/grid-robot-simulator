@@ -391,6 +391,17 @@
 				// 3. Check if the robot has reached the end point
 				if (current_position[0] === end[0] && current_position[1] === end[1]) {
 					logEvent(`(Simulation) Exiting Simulation, Robot has reached the goal in ${current_iteration} steps!`);
+					const memoryString = JSON.stringify(memory);
+					const blob = new Blob([memoryString], { type: "text/plain;charset=utf-8" });
+					const a = document.createElement('a');
+					a.href = URL.createObjectURL(blob);
+
+					const currentTime = new Date();
+					const timestamp = currentTime.toLocaleTimeString();
+
+					a.download = `Memory_${timestamp}.json`;
+					a.click();
+					logEvent(`(Simulation) Memory exported as Memory_${timestamp}.json`);
 					break;
 				}
 
@@ -576,7 +587,7 @@
 				reader.onload = function(event) {
 					try {
 						const importedGrid = JSON.parse(event.target.result);
-						if (Array.isArray(importedGrid) && importedGrid.length === m && importedGrid[0].length === n) {
+						if (Array.isArray(importedGrid) && importedGrid.length === rows && importedGrid[0].length === cols) {
 							grid = importedGrid;
 							renderGrid();
 							logEvent(`Grid state imported successfully from ${file.name}`);
