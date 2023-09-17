@@ -45,3 +45,8 @@ Finally, the robot only has the following moveset;
 3. Robot can steer forward towards it's right (changing it's heading +45 degrees)
 4. Robot can reverse (not altering it's heading)
 5. Robot can rotate in place (either left or right, -45/+45 degrees)
+
+Exporting/Importing your own GRID!
+Simply clicking on ("Export Grid to File") will generate a .grid file. 
+This file is a regular json file that can be edited to make your own custom grid. Or you can click and create your grid for export and later importing.
+Importing the grid is just a matter of pressing ("Browse") then clicking ("Import Grid from File").
