@@ -17,6 +17,25 @@ A log is displayed on the right side of the page, indicating actions taken, alon
 * reset ending or starting points (or everything)
 * randomly generate obstacles
 * set the starting position's heading 
+* number of moves required
+
+The grid view on the left side of the screen contains:
+* the actual map being used
+* the start location and heading (if clicked)
+* the end location (if clicked)
+* place or remove obstacle (if clicked)
+
+Removing a placed Items is as simple as clicking it again!
+
+There's two additional modes:
+* in simulation mode, the robot's memory and previous locations are displayed
+- Grey means discovered obstacle
+- Arrows indicate direction
+- Blue means previous robot locations
+- Purple means discovered cleared cell in memory
+
+* in optimial path finding mode (clicking find path)
+- yellow indicates the optimial path found using Dijkstra's 
 
 Simulation and Dijkstra's requires that a start and end point be specified. 
 
